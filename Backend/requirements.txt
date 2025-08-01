@@ -9,7 +9,7 @@ requests==2.31.0
 python-dotenv==1.0.0
 
 # Frontend interface
-gradio==4.44.0
+gradio>=5.39.0
 
 # Optional: For full functionality (uncomment if needed)
 # newspaper3k==0.2.8

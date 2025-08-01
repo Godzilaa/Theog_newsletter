@@ -8,7 +8,7 @@ import threading
 import os
 
 # Configuration
-FLASK_URL = "http://localhost:5000"
+FLASK_URL = "https://theog-newsletter-1.onrender.com"
 flask_process = None
 
 def check_flask_status():
@@ -21,25 +21,11 @@ def check_flask_status():
 
 def start_flask_backend():
     """Start the Flask backend in a separate process"""
-    global flask_process
-    try:
-        flask_process = subprocess.Popen(
-            ["python", "Scraper.py"],
-            cwd=os.path.dirname(os.path.abspath(__file__))
-        )
-        time.sleep(3)  # Give Flask time to start
-        return "✅ Flask backend started successfully!"
-    except Exception as e:
-        return f"❌ Error starting Flask backend: {str(e)}"
+    return "ℹ️ Using deployed backend at https://theog-newsletter-1.onrender.com\nNo need to start local backend."
 
 def stop_flask_backend():
     """Stop the Flask backend"""
-    global flask_process
-    if flask_process:
-        flask_process.terminate()
-        flask_process = None
-        return "⏹️ Flask backend stopped"
-    return "Flask backend was not running"
+    return "ℹ️ Using deployed backend - cannot stop remote server"
 
 def get_backend_status():
     """Get backend status information"""
@@ -151,13 +137,12 @@ def get_categories():
     except:
         return ["general", "business", "technology", "sports", "health", "science", "entertainment"]
 
-# Auto-start Flask backend when Gradio starts
+# Auto-check backend status when Gradio starts
 def initialize_backend():
-    """Initialize the Flask backend"""
-    if not check_flask_status():
-        start_flask_backend()
+    """Check the deployed backend status"""
+    pass  # No need to start anything - using deployed backend
 
-# Initialize backend in a separate thread
+# Check backend status on startup
 threading.Thread(target=initialize_backend, daemon=True).start()
 
 # Create Gradio interface
@@ -218,25 +203,6 @@ with gr.Blocks(title="Newsletter App", theme=gr.themes.Soft()) as app:
                 outputs=[news_output]
             )
         
-        # Backend Management Tab
-        with gr.TabItem("⚙️ Backend"):
-            with gr.Row():
-                with gr.Column():
-                    gr.Markdown("### Backend Control")
-                    start_btn = gr.Button("🚀 Start Backend", variant="primary")
-                    stop_btn = gr.Button("⏹️ Stop Backend", variant="secondary")
-                    status_btn = gr.Button("🔍 Check Status", variant="secondary")
-                    
-                with gr.Column():
-                    backend_status = gr.Markdown(
-                        value="Click 'Check Status' to see backend information",
-                        label="Backend Status"
-                    )
-            
-            start_btn.click(start_flask_backend, outputs=[backend_status])
-            stop_btn.click(stop_flask_backend, outputs=[backend_status])
-            status_btn.click(get_backend_status, outputs=[backend_status])
-        
         # Setup Tab
         with gr.TabItem("📋 Setup"):
             gr.Markdown("""
@@ -244,41 +210,58 @@ with gr.Blocks(title="Newsletter App", theme=gr.themes.Soft()) as app:
             
             1. **Install Dependencies**:
                ```bash
-               pip install flask flask-cors requests python-dotenv gradio
+               pip install gradio requests
                ```
             
-            2. **Configure API Keys** (Optional):
-               - Create a `.env` file in the Backend folder
-               - Add your NewsAPI key: `NEWS_API_KEY=your_api_key_here`
-               - Get a free key from: [newsapi.org](https://newsapi.org/)
+            2. **Backend Configuration**:
+               - Using deployed backend: https://theog-newsletter-1.onrender.com
+               - No local backend setup required!
             
             3. **Start the App**:
-               - The backend should start automatically
-               - If not, use the 'Start Backend' button in the Backend tab
+               ```bash
+               python app.py
+               ```
             
             ### 📰 Available News Sources
             
             - **Hacker News**: Tech news and discussions (no API key required)
-            - **NewsAPI**: General news in multiple categories (requires free API key)
+            - **NewsAPI**: General news in multiple categories (configured on server)
             
-            ### 🔧 Troubleshooting
+            ### � Troubleshooting
             
-            - If backend fails to start, check that port 5000 is available
+            - If backend is slow, it might be because Render.com services sleep when inactive
             - Check the Backend tab for status information
-            - Make sure all dependencies are installed
+            - The first request might take 30-60 seconds to wake up the server
             """)
-
-# Auto-refresh status on load
-app.load(get_backend_status, outputs=[])
+        
+        # Backend Management Tab
+        with gr.TabItem("⚙️ Backend"):
+            with gr.Row():
+                with gr.Column():
+                    gr.Markdown("### Backend Status")
+                    gr.Markdown("**Deployed Backend**: https://theog-newsletter-1.onrender.com")
+                    status_btn = gr.Button("🔍 Check Status", variant="primary")
+                    
+                with gr.Column():
+                    backend_status = gr.Markdown(
+                        value="Click 'Check Status' to see backend information",
+                        label="Backend Status"
+                    )
+            
+            status_btn.click(get_backend_status, outputs=[backend_status])
+    
+    # Auto-refresh status on load
+    app.load(get_backend_status, outputs=[])
 
 if __name__ == "__main__":
     print("🚀 Starting Newsletter App with Gradio...")
-    print("📝 The app will be available at: http://localhost:7860")
-    print("🔧 Backend API runs on: http://localhost:5000")
+    print("📝 Frontend UI: http://localhost:7860")
+    print("🔧 Backend API: https://theog-newsletter-1.onrender.com")
+    print("🌐 Using deployed backend - no local backend needed!")
     
     app.launch(
         server_name="0.0.0.0",
         server_port=7860,
-        share=False,
+        share=True,
         show_error=True
     )
