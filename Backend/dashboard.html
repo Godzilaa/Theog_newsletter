@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Automation Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f7;
+            color: #1d1d1f;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e5e5e7;
+        }
+        
+        .card h3 {
+            margin-bottom: 16px;
+            color: #1d1d1f;
+            font-size: 1.3rem;
+        }
+        
+        .button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 8px 8px 8px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .button:hover {
+            background: #0051d5;
+            transform: translateY(-1px);
+        }
+        
+        .button.success { background: #28a745; }
+        .button.danger { background: #dc3545; }
+        .button.warning { background: #ffc107; color: #1d1d1f; }
+        
+        .status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin: 8px 0;
+        }
+        
+        .status.running { background: #d4edda; color: #155724; }
+        .status.stopped { background: #f8d7da; color: #721c24; }
+        
+        .newsletter-list {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid #e5e5e7;
+        }
+        
+        .newsletter-item {
+            border-bottom: 1px solid #e5e5e7;
+            padding: 16px 0;
+        }
+        
+        .newsletter-item:last-child {
+            border-bottom: none;
+        }
+        
+        .newsletter-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .newsletter-id {
+            font-weight: 600;
+            color: #007aff;
+        }
+        
+        .newsletter-time {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .newsletter-preview {
+            color: #444;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+        }
+        
+        .success {
+            color: #155724;
+            background: #d4edda;
+            padding: 12px;
+            border-radius: 8px;
+            margin: 8px 0;
+        }
+        
+        .categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0;
+        }
+        
+        .category-tag {
+            background: #f0f0f0;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📰 Newsletter Automation Dashboard</h1>
+            <p>Automated news generation with AI agents using Google Gemini</p>
+        </div>
+        
+        <div class="dashboard-grid">
+            <!-- Scheduler Control -->
+            <div class="card">
+                <h3>🕐 Scheduler Control</h3>
+                <div id="scheduler-status" class="status stopped">Checking status...</div>
+                <button class="button success" onclick="startScheduler()">Start Scheduler</button>
+                <button class="button danger" onclick="stopScheduler()">Stop Scheduler</button>
+                <button class="button" onclick="checkSchedulerStatus()">Refresh Status</button>
+            </div>
+            
+            <!-- Manual Generation -->
+            <div class="card">
+                <h3>⚡ Manual Generation</h3>
+                <p>Generate a newsletter immediately</p>
+                <div class="categories">
+                    <label><input type="checkbox" checked value="technology"> Technology</label>
+                    <label><input type="checkbox" checked value="business"> Business</label>
+                    <label><input type="checkbox" checked value="science"> Science</label>
+                    <label><input type="checkbox" checked value="general"> General</label>
+                    <label><input type="checkbox" value="health"> Health</label>
+                </div>
+                <button class="button" onclick="generateNewsletter()">Generate Newsletter</button>
+                <div id="generation-status"></div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="card">
+                <h3>📊 Statistics</h3>
+                <div id="stats">
+                    <div>Total Newsletters: <span id="total-count">-</span></div>
+                    <div>Last Generated: <span id="last-generated">-</span></div>
+                    <div>Scheduler Status: <span id="scheduler-running">-</span></div>
+                </div>
+                <button class="button" onclick="refreshStats()">Refresh Stats</button>
+            </div>
+        </div>
+        
+        <!-- Newsletter List -->
+        <div class="newsletter-list">
+            <h3>📑 Generated Newsletters</h3>
+            <button class="button" onclick="loadNewsletters()">Refresh List</button>
+            <div id="newsletters-container">
+                <div class="loading">Click "Refresh List" to load newsletters...</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        
+        // Utility functions
+        function showMessage(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+        
+        function formatDate(isoString) {
+            return new Date(isoString).toLocaleString();
+        }
+        
+        // Scheduler functions
+        async function startScheduler() {
+            try {
+                const response = await fetch(`${API_BASE}/scheduler/start`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showMessage('generation-status', 'Scheduler started successfully!', 'success');
+                    checkSchedulerStatus();
+                } else {
+                    showMessage('generation-status', data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('generation-status', `Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function stopScheduler() {
+            try {
+                const response = await fetch(`${API_BASE}/scheduler/stop`, {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showMessage('generation-status', 'Scheduler stopped successfully!', 'success');
+                    checkSchedulerStatus();
+                } else {
+                    showMessage('generation-status', data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('generation-status', `Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function checkSchedulerStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/scheduler/status`);
+                const data = await response.json();
+                
+                const statusElement = document.getElementById('scheduler-status');
+                const runningElement = document.getElementById('scheduler-running');
+                
+                if (data.scheduler_running) {
+                    statusElement.className = 'status running';
+                    statusElement.textContent = 'Running - Generating every minute';
+                    runningElement.textContent = 'Active';
+                } else {
+                    statusElement.className = 'status stopped';
+                    statusElement.textContent = 'Stopped';
+                    runningElement.textContent = 'Inactive';
+                }
+                
+                document.getElementById('total-count').textContent = data.total_newsletters || 0;
+                document.getElementById('last-generated').textContent = 
+                    data.last_newsletter ? formatDate(data.last_newsletter) : 'None';
+                
+            } catch (error) {
+                showMessage('generation-status', `Error checking status: ${error.message}`, 'error');
+            }
+        }
+        
+        // Manual generation
+        async function generateNewsletter() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]:checked');
+            const categories = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (categories.length === 0) {
+                showMessage('generation-status', 'Please select at least one category', 'error');
+                return;
+            }
+            
+            showMessage('generation-status', 'Generating newsletter...', 'info');
+            
+            try {
+                const response = await fetch(`${API_BASE}/generate-newsletter`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ categories })
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    showMessage('generation-status', 
+                        `Newsletter #${data.newsletter_id} generated successfully!`, 'success');
+                    loadNewsletters();
+                    refreshStats();
+                } else {
+                    showMessage('generation-status', data.message, 'error');
+                }
+            } catch (error) {
+                showMessage('generation-status', `Error: ${error.message}`, 'error');
+            }
+        }
+        
+        // Load newsletters
+        async function loadNewsletters() {
+            const container = document.getElementById('newsletters-container');
+            container.innerHTML = '<div class="loading">Loading newsletters...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/newsletters?limit=10`);
+                const data = await response.json();
+                
+                if (data.status === 'success' && data.data.length > 0) {
+                    container.innerHTML = data.data.map(newsletter => `
+                        <div class="newsletter-item">
+                            <div class="newsletter-meta">
+                                <span class="newsletter-id">Newsletter #${newsletter.id}</span>
+                                <span class="newsletter-time">${formatDate(newsletter.timestamp)}</span>
+                            </div>
+                            <div class="categories">
+                                ${newsletter.metadata.categories.map(cat => 
+                                    `<span class="category-tag">${cat}</span>`
+                                ).join('')}
+                            </div>
+                            <div class="newsletter-preview">${newsletter.content_preview}</div>
+                            <button class="button" onclick="viewFullNewsletter(${newsletter.id})">View Full Content</button>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="loading">No newsletters generated yet</div>';
+                }
+            } catch (error) {
+                container.innerHTML = `<div class="error">Error loading newsletters: ${error.message}</div>`;
+            }
+        }
+        
+        // View full newsletter
+        async function viewFullNewsletter(id) {
+            try {
+                const response = await fetch(`${API_BASE}/newsletters/${id}`);
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Open in new window or modal
+                    const newWindow = window.open('', '_blank');
+                    newWindow.document.write(`
+                        <html>
+                            <head>
+                                <title>Newsletter #${id}</title>
+                                <style>
+                                    body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+                                    pre { white-space: pre-wrap; line-height: 1.6; }
+                                </style>
+                            </head>
+                            <body>
+                                <h1>Newsletter #${id}</h1>
+                                <p><strong>Generated:</strong> ${formatDate(data.data.timestamp)}</p>
+                                <p><strong>Categories:</strong> ${data.data.metadata.categories.join(', ')}</p>
+                                <hr>
+                                <pre>${data.data.content}</pre>
+                            </body>
+                        </html>
+                    `);
+                } else {
+                    alert('Error loading newsletter: ' + data.message);
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // Refresh stats
+        function refreshStats() {
+            checkSchedulerStatus();
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            checkSchedulerStatus();
+            loadNewsletters();
+        });
+        
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            checkSchedulerStatus();
+        }, 30000);
+    </script>
+</body>
+</html>

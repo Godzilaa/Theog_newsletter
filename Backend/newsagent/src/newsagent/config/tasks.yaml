@@ -1,0 +1,52 @@
+research_task:
+  description: >
+    Research and gather news articles from NewsAPI using the available tools.
+    Focus on categories: {categories}
+    
+    Instructions:
+    1. Use the News Scraper tool to fetch articles from NewsAPI
+    2. Fetch articles from relevant categories based on the specified focus areas
+    3. Analyze each article for relevance, importance, and potential reader interest
+    4. Identify trending topics and breaking news stories
+    5. Categorize articles by theme and priority
+    6. Extract key information including headlines, summaries, sources, and publication times
+    7. Provide recommendations on which stories are most suitable for newsletter inclusion
+    
+  expected_output: >
+    A comprehensive research report containing:
+    - List of top 10-15 most important/relevant news stories from NewsAPI
+    - Each story should include: title, source, category, brief summary, and why it's newsworthy
+    - Trending topics and themes identified across all categories
+    - Recommendations for newsletter content prioritization
+    - Category diversity analysis (mix of tech, business, health, science, etc.)
+    
+  agent: researcher
+
+writing_task:
+  description: >
+    Transform the research findings into professional newsletter articles.
+    
+    Instructions:
+    1. Review all research findings and select the top 5-7 stories for the newsletter
+    2. Write compelling article headlines that grab attention
+    3. Create engaging article content for each selected story with:
+       - Strong opening paragraph that hooks the reader
+       - Clear and concise body paragraphs with key details
+       - Proper attribution to original sources
+       - Professional news writing tone
+    4. Ensure articles are newsletter-appropriate (concise but informative)
+    5. Include relevant quotes or statistics when available
+    6. Structure content for easy scanning and readability
+    7. Add a brief editor's note or summary if needed
+    
+  expected_output: >
+    A complete newsletter draft containing:
+    - Newsletter header with date and edition information
+    - 5-7 well-written news articles in proper journalistic format
+    - Each article should be 150-300 words
+    - Headlines that are engaging and SEO-friendly
+    - Proper source attribution
+    - Professional formatting suitable for email newsletter
+    - Brief summary section highlighting key takeaways
+    
+  agent: writer
