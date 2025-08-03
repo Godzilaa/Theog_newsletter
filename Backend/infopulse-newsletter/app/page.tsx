@@ -1,121 +1,70 @@
 "use client"
 
-import { useState, Suspense } from "react"
+import { useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Mail, TrendingUp, Filter, Sun, Moon, Menu, X, Twitter, Github, Linkedin, Sparkles } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Sun, Moon, Menu, X, TrendingUp, Filter, Twitter, Github, Linkedin } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
-import { Badge } from "@/components/ui/badge"
-import { ThreeBackgroundWrapper } from "./components/three-background"
-import { AIToolsPanel } from "./components/ai-tools-panel"
-import { NewsModal } from "./components/news-modal"
-import { AIImageCard } from "./components/ai-image-card"
+import { NewsArticleCard } from "./components/news-article-card"
 import { useTheme } from "./components/theme-provider"
+import { CategoryNavbar } from "./components/category-navbar"
+import { Badge } from "@/components/ui/badge"
+import { type NewsArticle } from "@/lib/api"
 
 // Enhanced news data with AI image URLs
-const newsData = [
+const categories = ["technology", "business", "science", "health", "sports", "entertainment", "general"]
+
+const newsData: NewsArticle[] = [
   {
-    id: 1,
-    category: "Tech",
-    headline: "AI Revolution Transforms Healthcare Industry Worldwide",
-    summary:
-      "New artificial intelligence systems are revolutionizing patient care and medical diagnosis across major hospitals, improving accuracy by 40% and reducing diagnosis time significantly.",
-    content: "Full article content would go here with detailed information about the AI healthcare revolution...",
-    timestamp: "2 hours ago",
-    source: "techcrunch.com",
-    color: "from-cyan-400 to-blue-500",
-    categoryColor: "#00FFFF",
-    aiImage: "/ai-healthcare-futuristic-medical.png",
+    title: "AI Revolution Transforms Healthcare Industry",
+    url: "https://techcrunch.com/ai-healthcare",
+    description: "New artificial intelligence systems are revolutionizing patient care and medical diagnosis across major hospitals.",
+    source: "TechCrunch",
+    published_at: "2025-08-03T10:00:00Z",
+    author: "John Doe",
+    image_url: "/ai-healthcare.png"
   },
   {
-    id: 2,
-    category: "Business",
-    headline: "Global Markets Surge on Economic Recovery Signals",
-    summary:
-      "Stock markets worldwide see significant gains as economic indicators point to sustained recovery and growth, with tech stocks leading the charge.",
-    content: "Detailed analysis of global market trends and economic recovery indicators...",
-    timestamp: "4 hours ago",
-    source: "bloomberg.com",
-    color: "from-green-400 to-emerald-500",
-    categoryColor: "#10B981",
-    aiImage: "/stock-market-growth.png",
+    title: "Global Markets Surge on Economic Recovery",
+    url: "https://bloomberg.com/markets",
+    description: "Stock markets worldwide see significant gains as economic indicators point to sustained recovery and growth.",
+    source: "Bloomberg",
+    published_at: "2025-08-03T09:00:00Z",
+    author: "Jane Smith",
+    image_url: "/markets.png"
   },
   {
-    id: 3,
-    category: "Politics",
-    headline: "Climate Summit Reaches Historic Agreement on Carbon Goals",
-    summary:
-      "World leaders unite on ambitious climate targets, setting new standards for carbon reduction and renewable energy adoption by 2030.",
-    content: "Comprehensive coverage of the climate summit agreements and their global implications...",
-    timestamp: "6 hours ago",
-    source: "reuters.com",
-    color: "from-blue-400 to-indigo-500",
-    categoryColor: "#EF4444",
-    aiImage: "/climate-summit-renewable-energy.png",
-  },
-  {
-    id: 4,
-    category: "Sports",
-    headline: "Championship Finals Break Global Viewership Records",
-    summary:
-      "The most-watched sporting event of the year delivers thrilling competition and record-breaking audience numbers across all platforms.",
-    content: "Complete coverage of the championship finals and record-breaking viewership statistics...",
-    timestamp: "8 hours ago",
-    source: "espn.com",
-    color: "from-orange-400 to-red-500",
-    categoryColor: "#F97316",
-    aiImage: "/championship-stadium-celebration.png",
-  },
-  {
-    id: 5,
-    category: "World",
-    headline: "International Space Station Mission Achieves Breakthrough",
-    summary:
-      "Astronauts complete groundbreaking research mission, advancing our understanding of space exploration and potential Mars colonization.",
-    content: "In-depth report on the space station mission and its implications for future space exploration...",
-    timestamp: "10 hours ago",
-    source: "nasa.gov",
-    color: "from-purple-400 to-pink-500",
-    categoryColor: "#8B5CF6",
-    aiImage: "/space-station-earth-orbit.png",
-  },
-  {
-    id: 6,
-    category: "Local",
-    headline: "Smart City Initiative Launches Advanced Transportation",
-    summary:
-      "New smart traffic systems and electric bus networks promise to reduce commute times by 30% and environmental impact significantly.",
-    content: "Local news coverage of the smart city transportation initiative and its expected benefits...",
-    timestamp: "12 hours ago",
-    source: "localnews.com",
-    color: "from-pink-400 to-rose-500",
-    categoryColor: "#EC4899",
-    aiImage: "/placeholder-ibr1o.png",
-  },
+    title: "Space Station Research Breakthrough",
+    url: "https://nasa.gov/news",
+    description: "Astronauts complete groundbreaking research mission on the ISS.",
+    source: "NASA",
+    published_at: "2025-08-03T08:00:00Z",
+    author: "Mike Johnson",
+    image_url: "/space.png"
+  }
 ]
 
-const categories = ["Home", "Local", "Politics", "Business", "Tech", "World", "Sports"]
-const trendingNews = newsData.slice(0, 5)
+// Top trending news
+const trendingNews = newsData.slice(0, 5).map((article, index) => ({
+  id: index,
+  headline: article.title,
+  category: categories[index % categories.length],
+  color: index % 2 === 0 ? "from-cyan-500 to-blue-500" : "from-purple-500 to-pink-500",
+  ...article
+}))
 
 export default function InfoPulse() {
   const { theme, toggleTheme } = useTheme()
-  const [activeTab, setActiveTab] = useState("Home")
-  const [email, setEmail] = useState("")
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [newsArticles] = useState<NewsArticle[]>(newsData)
+  const [selectedNews, setSelectedNews] = useState<NewsArticle | null>(null)
+  const [activeTab, setActiveTab] = useState(categories[0])
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
-  const [isAIToolsOpen, setIsAIToolsOpen] = useState(false)
-  const [selectedNews, setSelectedNews] = useState<any>(null)
 
   const handleFilterChange = (category: string, checked: boolean) => {
-    if (checked) {
-      setSelectedFilters([...selectedFilters, category])
-    } else {
-      setSelectedFilters(selectedFilters.filter((f) => f !== category))
-    }
+    setSelectedFilters(prev => 
+      checked ? [...prev, category] : prev.filter(c => c !== category)
+    )
   }
-
-  const filteredNews = activeTab === "Home" ? newsData : newsData.filter((news) => news.category === activeTab)
 
   return (
     <div
@@ -123,20 +72,14 @@ export default function InfoPulse() {
         theme === "dark" ? "bg-[#0e0e0e] text-white" : "bg-[#f5f5f5] text-gray-900"
       }`}
     >
-      {/* 3D Background */}
-      <Suspense
-        fallback={
-          <div
-            className={`fixed inset-0 -z-10 ${
-              theme === "dark"
-                ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
-                : "bg-gradient-to-br from-gray-100 via-white to-gray-100"
-            }`}
-          />
-        }
-      >
-        <ThreeBackgroundWrapper />
-      </Suspense>
+      {/* Background */}
+      <div
+        className={`fixed inset-0 -z-10 ${
+          theme === "dark"
+            ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
+            : "bg-gradient-to-br from-gray-100 via-white to-gray-100"
+        }`}
+      />
 
       {/* Header */}
       <header
@@ -177,55 +120,11 @@ export default function InfoPulse() {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-6">
-              {categories.map((category) => (
-                <motion.button
-                  key={category}
-                  onClick={() => setActiveTab(category)}
-                  className={`px-4 py-2 rounded-lg transition-all duration-300 relative ${
-                    activeTab === category
-                      ? theme === "dark"
-                        ? "text-[#00FFFF]"
-                        : "text-indigo-600"
-                      : theme === "dark"
-                        ? "text-gray-400 hover:text-white"
-                        : "text-gray-600 hover:text-gray-900"
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {category}
-                  {activeTab === category && (
-                    <motion.div
-                      className={`absolute bottom-0 left-0 right-0 h-0.5 ${
-                        theme === "dark"
-                          ? "bg-gradient-to-r from-[#00FFFF] to-[#FF00FF]"
-                          : "bg-gradient-to-r from-indigo-600 to-purple-600"
-                      }`}
-                      layoutId="activeTab"
-                      initial={false}
-                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                    />
-                  )}
-                </motion.button>
-              ))}
+              <CategoryNavbar />
             </nav>
 
             {/* Controls */}
             <div className="flex items-center gap-4">
-              {/* AI Tools Button */}
-              <motion.button
-                onClick={() => setIsAIToolsOpen(true)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 ${
-                  theme === "dark"
-                    ? "bg-gradient-to-r from-[#FF00FF]/20 to-[#00FFFF]/20 text-[#FF00FF] hover:from-[#FF00FF]/30 hover:to-[#00FFFF]/30"
-                    : "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-600 hover:from-purple-200 hover:to-indigo-200"
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Sparkles className="w-4 h-4" />
-                AI Tools
-              </motion.button>
 
               {/* Theme Toggle */}
               <motion.div className="flex items-center gap-2" whileHover={{ scale: 1.05 }}>
@@ -311,31 +210,10 @@ export default function InfoPulse() {
               Real-time news aggregation powered by AI and advanced web scraping
             </p>
 
-            <motion.div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto" whileHover={{ scale: 1.02 }}>
-              <Input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={`flex-1 ${
-                  theme === "dark"
-                    ? "bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-[#00FFFF]"
-                    : "bg-white/50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-indigo-500"
-                } backdrop-blur-sm`}
-              />
-              <Button
-                className={`${
-                  theme === "dark"
-                    ? "bg-gradient-to-r from-[#00FFFF] to-[#FF00FF] text-black hover:shadow-lg hover:shadow-cyan-500/25"
-                    : "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg hover:shadow-indigo-500/25"
-                } font-semibold transition-all duration-300`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Mail className="w-4 h-4 mr-2" />
-                Subscribe
-              </Button>
-            </motion.div>
+            {/* Navigation Component */}
+            <div className="mt-8">
+              <CategoryNavbar />
+            </div>
           </motion.div>
         </div>
       </section>
@@ -351,13 +229,12 @@ export default function InfoPulse() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              {filteredNews.map((news, index) => (
-                <AIImageCard
-                  key={news.id}
-                  news={news}
+              {newsArticles.map((article, index) => (
+                <NewsArticleCard
+                  key={article.url}
+                  article={article}
                   index={index}
-                  theme={theme}
-                  onClick={() => setSelectedNews(news)}
+                  onClick={() => setSelectedNews(article)}
                 />
               ))}
             </motion.div>
@@ -499,11 +376,6 @@ export default function InfoPulse() {
         </div>
       </footer>
 
-      {/* AI Tools Panel */}
-      <AIToolsPanel isOpen={isAIToolsOpen} onClose={() => setIsAIToolsOpen(false)} theme={theme} />
-
-      {/* News Modal */}
-      <NewsModal news={selectedNews} onClose={() => setSelectedNews(null)} theme={theme} />
     </div>
   )
 }

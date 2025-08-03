@@ -24,7 +24,7 @@ research_task:
 
 writing_task:
   description: >
-    Transform the research findings into professional newsletter articles.
+    Transform the research findings into professional newsletter articles with accompanying images.
     
     Instructions:
     1. Review all research findings and select the top 5-7 stories for the newsletter
@@ -34,10 +34,15 @@ writing_task:
        - Clear and concise body paragraphs with key details
        - Proper attribution to original sources
        - Professional news writing tone
-    4. Ensure articles are newsletter-appropriate (concise but informative)
-    5. Include relevant quotes or statistics when available
-    6. Structure content for easy scanning and readability
-    7. Add a brief editor's note or summary if needed
+    4. Generate relevant images for each article using image generation tools:
+       - Create descriptive prompts based on article content
+       - Generate professional, news-appropriate images
+       - Ensure images complement and enhance the article content
+       - Include image descriptions for accessibility
+    5. Ensure articles are newsletter-appropriate (concise but informative)
+    6. Include relevant quotes or statistics when available
+    7. Structure content for easy scanning and readability
+    8. Add a brief editor's note or summary if needed
     
   expected_output: >
     A complete newsletter draft containing:
@@ -47,6 +52,11 @@ writing_task:
     - Headlines that are engaging and SEO-friendly
     - Proper source attribution
     - Professional formatting suitable for email newsletter
+    - Generated images for each article with:
+      * Relevant, professional visuals that enhance the story
+      * Descriptive alt text for accessibility
+      * Appropriate image captions
+      * High-quality, news-appropriate imagery
     - Brief summary section highlighting key takeaways
     
   agent: writer

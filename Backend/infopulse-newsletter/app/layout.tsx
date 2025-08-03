@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Sora } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "./components/theme-provider"
+import { Toaster } from "sonner"
 
 const sora = Sora({ subsets: ["latin"] })
 
@@ -20,7 +21,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={sora.className}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <Toaster position="top-right" richColors />
+        </ThemeProvider>
       </body>
     </html>
   )

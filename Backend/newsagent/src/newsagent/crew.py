@@ -6,11 +6,14 @@ import os
 from .tools.custom_tool import NewsScraper, CategoryFetcher
 
 # Configure Google Gemini LLM
-def get_gemini_llm():
-    """Get configured Gemini LLM instance"""
+
+# Configure Groq LLM
+def get_groq_llm():
+    """Get configured Groq LLM instance"""
     return LLM(
-        model="gemini/gemini-1.5-flash",
-        api_key=os.getenv("GOOGLE_API_KEY")
+        model="llama3-70b-8192",
+        api_key=os.getenv("GROQ_API_KEY"),
+        base_url="https://api.groq.com/openai/v1"
     )
 
 # If you want to run a snippet of code before or after the crew starts,
@@ -30,20 +33,22 @@ class Newsagent():
     
     # If you would like to add tools to your agents, you can learn more about it here:
     # https://docs.crewai.com/concepts/agents#agent-tools
+
     @agent
     def researcher(self) -> Agent:
         return Agent(
             config=self.agents_config['researcher'], # type: ignore[index]
             tools=[NewsScraper(), CategoryFetcher()],
-            llm=get_gemini_llm(),
+            llm=get_groq_llm(),
             verbose=True
         )
+
 
     @agent
     def writer(self) -> Agent:
         return Agent(
             config=self.agents_config['writer'], # type: ignore[index]
-            llm=get_gemini_llm(),
+            llm=get_groq_llm(),
             verbose=True
         )
 

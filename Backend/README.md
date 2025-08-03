@@ -5,6 +5,7 @@ An automated newsletter generation system powered by **Google Gemini** AI and **
 ## 🚀 Features
 
 - **AI-Powered Agents**: Researcher and Writer agents using Google Gemini
+- **Automated Image Generation**: AI-generated images for each newsletter article
 - **Automated Scheduling**: Generate newsletters automatically with configurable intervals
 - **NewsAPI Integration**: Comprehensive news coverage from reliable sources
 - **RESTful API**: Complete REST API for all operations
@@ -24,6 +25,10 @@ Create a `.env` file with:
 ```
 GOOGLE_API_KEY=your_google_gemini_api_key_here
 NEWS_API_KEY=your_newsapi_key_here
+
+# Optional: For image generation (choose one)
+OPENAI_API_KEY=your_openai_api_key_here
+STABILITY_API_KEY=your_stability_ai_key_here
 ```
 
 ### 3. Start the System
