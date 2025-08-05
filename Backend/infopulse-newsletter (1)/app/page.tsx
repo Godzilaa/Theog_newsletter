@@ -1,70 +1,173 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Sun, Moon, Menu, X, TrendingUp, Filter, Twitter, Github, Linkedin } from "lucide-react"
+import { Mail, TrendingUp, Filter, Sun, Moon, Menu, X, Twitter, Github, Linkedin, Sparkles } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
-import { NewsArticleCard } from "./components/news-article-card"
-import { useTheme } from "./components/theme-provider"
-import { CategoryNavbar } from "./components/category-navbar"
 import { Badge } from "@/components/ui/badge"
-import { type NewsArticle } from "@/lib/api"
+import { ThreeBackground } from "./components/three-background"
+import { AIToolsPanel } from "./components/ai-tools-panel"
+import { NewsModal } from "./components/news-modal"
+import { AIImageCard } from "./components/ai-image-card"
+import { useTheme } from "./components/theme-provider"
+import { fetchNews } from "@/lib/api"
+import { NewsArticle } from "./types"
 
-// Enhanced news data with AI image URLs
-const categories = ["technology", "business", "science", "health", "sports", "entertainment", "general"]
+interface AIImageCardProps {
+  article: NewsArticle;
+  onClick: () => void;
+}
 
-const newsData: NewsArticle[] = [
-  {
-    title: "AI Revolution Transforms Healthcare Industry",
-    url: "https://techcrunch.com/ai-healthcare",
-    description: "New artificial intelligence systems are revolutionizing patient care and medical diagnosis across major hospitals.",
-    source: "TechCrunch",
-    published_at: "2025-08-03T10:00:00Z",
-    author: "John Doe",
-    image_url: "/ai-healthcare.png"
-  },
-  {
-    title: "Global Markets Surge on Economic Recovery",
-    url: "https://bloomberg.com/markets",
-    description: "Stock markets worldwide see significant gains as economic indicators point to sustained recovery and growth.",
-    source: "Bloomberg",
-    published_at: "2025-08-03T09:00:00Z",
-    author: "Jane Smith",
-    image_url: "/markets.png"
-  },
-  {
-    title: "Space Station Research Breakthrough",
-    url: "https://nasa.gov/news",
-    description: "Astronauts complete groundbreaking research mission on the ISS.",
-    source: "NASA",
-    published_at: "2025-08-03T08:00:00Z",
-    author: "Mike Johnson",
-    image_url: "/space.png"
-  }
-]
+interface NewsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  article: NewsArticle | null;
+}
 
-// Top trending news
-const trendingNews = newsData.slice(0, 5).map((article, index) => ({
-  id: index,
-  headline: article.title,
-  category: categories[index % categories.length],
-  color: index % 2 === 0 ? "from-cyan-500 to-blue-500" : "from-purple-500 to-pink-500",
-  ...article
-}))
+const categories = ["All", "Local", "Politics", "Business", "Tech", "World", "Sports"]
 
-export default function InfoPulse() {
+export default function HomePage() {
   const { theme, toggleTheme } = useTheme()
-  const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [newsArticles] = useState<NewsArticle[]>(newsData)
-  const [selectedNews, setSelectedNews] = useState<NewsArticle | null>(null)
-  const [activeTab, setActiveTab] = useState(categories[0])
-  const [selectedFilters, setSelectedFilters] = useState<string[]>([])
+  const [newsData, setNewsData] = useState<NewsArticle[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null)
+  const [aiPanelOpen, setAIPanelOpen] = useState(false)
+  const [activeCategory, setActiveCategory] = useState("All")
 
-  const handleFilterChange = (category: string, checked: boolean) => {
-    setSelectedFilters(prev => 
-      checked ? [...prev, category] : prev.filter(c => c !== category)
-    )
+  // Fetch news on component mount
+  useEffect(() => {
+    const loadNews = async () => {
+      try {
+        setLoading(true)
+        const data = await fetchNews()
+        setNewsData(data)
+      } catch (err) {
+        const error = err as Error
+        setError(error.message)
+        console.error('Failed to fetch news:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadNews()
+  }, [])
+
+  const handleNewsClick = (article: NewsArticle) => {
+    setSelectedArticle(article)
+    setIsModalOpen(true)
   }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <ThreeBackground />
+      
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-xl">
+        <div className="container flex items-center justify-between h-16">
+          <div className="flex items-center space-x-4">
+            <Button variant="ghost" size="icon" className="md:hidden">
+              <Menu className="w-5 h-5" />
+            </Button>
+            <div className="hidden md:flex items-center space-x-6">
+              <span className="flex items-center text-lg font-semibold">
+                InfoPulse <Mail className="ml-2 w-5 h-5" />
+              </span>
+              <nav className="flex items-center space-x-4">
+                <Button variant="ghost">Latest</Button>
+                <Button variant="ghost">Categories</Button>
+                <Button variant="ghost">Search</Button>
+              </nav>
+            </div>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={toggleTheme}
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setAIPanelOpen(true)}
+            >
+              <Sparkles className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container pt-24 pb-16">
+        {loading ? (
+          <div className="flex justify-center items-center min-h-[60vh]">
+            <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-primary"></div>
+          </div>
+        ) : error ? (
+          <div className="text-center text-red-500">
+            Error loading news: {error}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {newsData.map((article) => (
+              <AIImageCard
+                key={article.id}
+                article={article}
+                onClick={() => handleNewsClick(article)}
+              />
+            ))}
+          </div>
+        )}
+      </main>
+
+      {/* Modals and Panels */}
+      <NewsModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        article={selectedArticle}
+      />
+      
+      <AIToolsPanel
+        isOpen={aiPanelOpen}
+        onClose={() => setAIPanelOpen(false)}
+        theme={theme}
+      />
+
+      {/* Footer */}
+      <footer className="border-t bg-background/80 backdrop-blur-xl">
+        <div className="container py-6">
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-muted-foreground">
+              © 2025 InfoPulse Newsletter. All rights reserved.
+            </p>
+            <div className="flex space-x-4">
+              <Button variant="ghost" size="icon">
+                <Twitter className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="icon">
+                <Github className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="icon">
+                <Linkedin className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+
+  const filteredNews = activeTab === "Home" ? newsData : newsData.filter((news) => news.category === activeTab)
 
   return (
     <div
@@ -72,14 +175,8 @@ export default function InfoPulse() {
         theme === "dark" ? "bg-[#0e0e0e] text-white" : "bg-[#f5f5f5] text-gray-900"
       }`}
     >
-      {/* Background */}
-      <div
-        className={`fixed inset-0 -z-10 ${
-          theme === "dark"
-            ? "bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900"
-            : "bg-gradient-to-br from-gray-100 via-white to-gray-100"
-        }`}
-      />
+      {/* Animated Background */}
+      <ThreeBackground />
 
       {/* Header */}
       <header
@@ -120,11 +217,55 @@ export default function InfoPulse() {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center gap-6">
-              <CategoryNavbar />
+              {categories.map((category) => (
+                <motion.button
+                  key={category}
+                  onClick={() => setActiveTab(category)}
+                  className={`px-4 py-2 rounded-lg transition-all duration-300 relative ${
+                    activeTab === category
+                      ? theme === "dark"
+                        ? "text-[#00FFFF]"
+                        : "text-indigo-600"
+                      : theme === "dark"
+                        ? "text-gray-400 hover:text-white"
+                        : "text-gray-600 hover:text-gray-900"
+                  }`}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {category}
+                  {activeTab === category && (
+                    <motion.div
+                      className={`absolute bottom-0 left-0 right-0 h-0.5 ${
+                        theme === "dark"
+                          ? "bg-gradient-to-r from-[#00FFFF] to-[#FF00FF]"
+                          : "bg-gradient-to-r from-indigo-600 to-purple-600"
+                      }`}
+                      layoutId="activeTab"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                    />
+                  )}
+                </motion.button>
+              ))}
             </nav>
 
             {/* Controls */}
             <div className="flex items-center gap-4">
+              {/* AI Tools Button */}
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  onClick={() => setIsAIToolsOpen(true)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-300 ${
+                    theme === "dark"
+                      ? "bg-gradient-to-r from-[#FF00FF]/20 to-[#00FFFF]/20 text-[#FF00FF] hover:from-[#FF00FF]/30 hover:to-[#00FFFF]/30"
+                      : "bg-gradient-to-r from-purple-100 to-indigo-100 text-purple-600 hover:from-purple-200 hover:to-indigo-200"
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  AI Tools
+                </Button>
+              </motion.div>
 
               {/* Theme Toggle */}
               <motion.div className="flex items-center gap-2" whileHover={{ scale: 1.05 }}>
@@ -210,10 +351,31 @@ export default function InfoPulse() {
               Real-time news aggregation powered by AI and advanced web scraping
             </p>
 
-            {/* Navigation Component */}
-            <div className="mt-8">
-              <CategoryNavbar />
-            </div>
+            <motion.div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto" whileHover={{ scale: 1.02 }}>
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`flex-1 ${
+                  theme === "dark"
+                    ? "bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-[#00FFFF]"
+                    : "bg-white/50 border-gray-300 text-gray-900 placeholder-gray-500 focus:border-indigo-500"
+                } backdrop-blur-sm`}
+              />
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button
+                  className={`${
+                    theme === "dark"
+                      ? "bg-gradient-to-r from-[#00FFFF] to-[#FF00FF] text-black hover:shadow-lg hover:shadow-cyan-500/25"
+                      : "bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:shadow-lg hover:shadow-indigo-500/25"
+                  } font-semibold transition-all duration-300`}
+                >
+                  <Mail className="w-4 h-4 mr-2" />
+                  Subscribe
+                </Button>
+              </motion.div>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -229,12 +391,13 @@ export default function InfoPulse() {
               animate={{ opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3 }}
             >
-              {newsArticles.map((article, index) => (
-                <NewsArticleCard
-                  key={article.url}
-                  article={article}
+              {filteredNews.map((news, index) => (
+                <AIImageCard
+                  key={news.id}
+                  news={news}
                   index={index}
-                  onClick={() => setSelectedNews(article)}
+                  theme={theme}
+                  onClick={() => setSelectedNews(news)}
                 />
               ))}
             </motion.div>
@@ -364,18 +527,23 @@ export default function InfoPulse() {
               </span>
               <div className="flex items-center gap-2">
                 <Badge className="bg-gradient-to-r from-pink-500 to-violet-500 text-white">DALL·E</Badge>
-                <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white">Three.js</Badge>
+                <Badge className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white">AI</Badge>
                 <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">GPT</Badge>
               </div>
             </div>
 
             <p className={`font-mono text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-              Built with AI, Three.js, and caffeine ☕
+              Built with AI, CSS animations, and caffeine ☕
             </p>
           </motion.div>
         </div>
       </footer>
 
+      {/* AI Tools Panel */}
+      <AIToolsPanel isOpen={isAIToolsOpen} onClose={() => setIsAIToolsOpen(false)} theme={theme} />
+
+      {/* News Modal */}
+      <NewsModal news={selectedNews} onClose={() => setSelectedNews(null)} theme={theme} />
     </div>
   )
 }

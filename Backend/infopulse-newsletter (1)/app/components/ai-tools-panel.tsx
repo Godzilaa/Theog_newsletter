@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X, Sparkles, ImageIcon, MessageSquare, Lightbulb, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { generateImage, summarizeText, explainText } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 
 interface AIToolsPanelProps {
   isOpen: boolean
@@ -18,32 +20,66 @@ export function AIToolsPanel({ isOpen, onClose, theme }: AIToolsPanelProps) {
   const [summaryText, setSummaryText] = useState("")
   const [explainText, setExplainText] = useState("")
   const [isGenerating, setIsGenerating] = useState(false)
+  const { toast } = useToast()
 
   const handleGenerateImage = async () => {
-    setIsGenerating(true)
-    // Simulate AI image generation
-    setTimeout(() => {
+    try {
+      setIsGenerating(true)
+      const result = await generateImage(imagePrompt)
+      // Handle the generated image URL
+      toast({
+        title: "Success",
+        description: "Image generated successfully",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate image",
+        variant: "destructive",
+      })
+    } finally {
       setIsGenerating(false)
-      // In a real app, this would call DALL-E API
-    }, 3000)
+    }
   }
 
   const handleSummarize = async () => {
-    setIsGenerating(true)
-    // Simulate AI summarization
-    setTimeout(() => {
+    try {
+      setIsGenerating(true)
+      const result = await summarizeText(summaryText)
+      setSummaryText(result.summary)
+      toast({
+        title: "Success",
+        description: "Text summarized successfully",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to summarize text",
+        variant: "destructive",
+      })
+    } finally {
       setIsGenerating(false)
-      setSummaryText("AI-generated summary would appear here...")
-    }, 2000)
+    }
   }
 
   const handleExplain = async () => {
-    setIsGenerating(true)
-    // Simulate AI explanation
-    setTimeout(() => {
+    try {
+      setIsGenerating(true)
+      const result = await explainText(explainText)
+      setExplainText(result.explanation)
+      toast({
+        title: "Success",
+        description: "Text explained successfully",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to explain text",
+        variant: "destructive",
+      })
+    } finally {
       setIsGenerating(false)
-      setExplainText("Simple explanation would appear here...")
-    }, 2000)
+    }
   }
 
   const tabs = [

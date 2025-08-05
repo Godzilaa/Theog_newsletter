@@ -14,6 +14,7 @@ import traceback
 import threading
 import time
 import json
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # Add the newsagent directory to the path
 sys.path.append(os.path.join(os.path.dirname(__file__), 'newsagent', 'src'))
@@ -40,7 +41,8 @@ logger = logging.getLogger(__name__)
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+app.wsgi_app = ProxyFix(app.wsgi_app)
+CORS(app, resources={r"/*": {"origins": ["http://localhost:3000", "http://localhost:3001", "http://localhost:3002"]}})  # Enable CORS for frontend
 
 # Available news categories
 CATEGORIES = ['general', 'business', 'entertainment', 'health', 'science', 'sports', 'technology']
@@ -55,6 +57,73 @@ ARTICLE_CACHE = {
 
 # Cache duration (in hours)
 CACHE_DURATION_HOURS = 2
+
+@app.route('/news')
+def get_news():
+    """Get news articles, optionally filtered by category"""
+    category = request.args.get('category')
+    if ARTICLE_CACHE['articles']:
+        articles = ARTICLE_CACHE['articles']
+        if category:
+            articles = [a for a in articles if a.get('category', '').lower() == category.lower()]
+        return jsonify(articles)
+    return jsonify([])
+
+@app.route('/generate-image', methods=['POST'])
+def generate_image():
+    """Generate an AI image based on prompt"""
+    try:
+        data = request.get_json()
+        prompt = data.get('prompt')
+        if not prompt:
+            return jsonify({"error": "No prompt provided"}), 400
+            
+        # Use ImageGenerator from newsagent
+        image_generator = ImageGenerator()
+        image_url = image_generator.generate(prompt)
+        
+        return jsonify({"url": image_url})
+    except Exception as e:
+        logger.error(f"Error generating image: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/summarize', methods=['POST'])
+def summarize_text():
+    """Summarize text using AI"""
+    try:
+        data = request.get_json()
+        text = data.get('text')
+        if not text:
+            return jsonify({"error": "No text provided"}), 400
+            
+        # Use text summarization from newsagent
+        from newsagent.tools.custom_tool import TextSummarizer
+        summarizer = TextSummarizer()
+        summary = summarizer.summarize(text)
+        
+        return jsonify({"summary": summary})
+    except Exception as e:
+        logger.error(f"Error summarizing text: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/explain', methods=['POST'])
+def explain_text():
+    """Explain text using AI"""
+    try:
+        data = request.get_json()
+        text = data.get('text')
+        if not text:
+            return jsonify({"error": "No text provided"}), 400
+            
+        # Use text explanation from newsagent
+        from newsagent.tools.custom_tool import TextExplainer
+        explainer = TextExplainer()
+        explanation = explainer.explain(text)
+        
+        return jsonify({"explanation": explanation})
+    except Exception as e:
+        logger.error(f"Error explaining text: {e}")
+        return jsonify({"error": str(e)}), 500
 
 def generate_articles_background():
     """Background function to generate articles"""
